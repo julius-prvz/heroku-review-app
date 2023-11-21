@@ -1599,6 +1599,8 @@ async function run() {
       issueNumber,
       repoOwner,
       sourceUrl,
+      eventName,
+      action
     })}`);
 
     if (forkRepo) {
@@ -1606,6 +1608,7 @@ async function run() {
       return;
     }
 
+    /*
     if ('labeled' === action) {
       core.startGroup('PR labelled');
       core.debug('Checking PR label...');
@@ -1627,10 +1630,21 @@ async function run() {
       core.endGroup();
       return;
     }
+    */
+
+  const payload = require(process.env.GITHUB_EVENT_PATH);
+
+  // Check if the 'xyz' label is present in the pull request labels
+  const has_label = payload.pull_request.labels.some(label => label.name === prLabel);
+
+  if (!has_label) {
+    core.info('Not a review app - return and skip process');
+    return;
+  }
 
     // Only people that can close PRs are maintainers or the author
     // hence can safely delete review app without being collaborator
-    if ('closed' === action) {
+    if ('closed' === payload.action) {
       core.debug('PR closed, deleting review app...');
       const app = await findReviewApp();
       if (app) {
@@ -1650,13 +1664,17 @@ async function run() {
     //   username: tools.context.actor,
     // });
 
+    /*
     const app = await findReviewApp();
     if (!app) {
       await createReviewApp();
     }
+    */
+
     const updatedApp = await waitReviewAppUpdated();
     outputAppDetails(updatedApp);
 
+    /*
     if (prLabel) {
       core.startGroup('Label PR');
       core.debug(`Adding label "${prLabel}" to PR...`);
@@ -1670,6 +1688,9 @@ async function run() {
     } else {
       core.debug('No label specified; will not label PR');
     }
+    */
+
+    /*
 
     if (shouldCommentPR) {
       core.startGroup('Comment on PR');
@@ -1684,6 +1705,9 @@ async function run() {
     } else {
       core.debug('should_comment_pull_request is not set; will not comment on PR');
     }
+
+    */
+
   } catch (err) {
     core.error(err);
     core.setFailed(err.message);
